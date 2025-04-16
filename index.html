@@ -1,0 +1,100 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <title>TITITCOMMUNITY Lua Obfuscator</title>
+  <style>
+    body {
+      background: #121212;
+      color: #00ffcc;
+      font-family: monospace;
+      padding: 20px;
+    }
+    textarea, pre {
+      width: 100%;
+      background: #1e1e1e;
+      color: #00ffcc;
+      padding: 10px;
+      border: none;
+      border-radius: 5px;
+      font-family: monospace;
+    }
+    button {
+      margin: 5px;
+      padding: 10px;
+      background: #00ffcc;
+      color: #0f0f0f;
+      border: none;
+      cursor: pointer;
+      font-weight: bold;
+    }
+    input[type="file"] {
+      margin: 5px;
+    }
+  </style>
+</head>
+<body>
+  <h2>TITITCOMMUNITY Lua Obfuscator</h2>
+  <input type="file" id="fileInput" accept=".lua"><br>
+  <textarea id="luaInput" rows="10" placeholder="Paste your Lua code here..."></textarea><br>
+  <button onclick="obfuscate()">Obfuscate</button>
+  <button onclick="copyOutput()">Copy</button>
+  <button onclick="download()">Download</button>
+  <button onclick="resetInput()">Reset</button>
+  <h3>Obfuscated Output:</h3>
+  <pre id="output">// obfuscated result will appear here</pre>
+
+  <script>
+    const wmHeader = '--[[Obfuscated By TITITCOMMUNITY]]';
+
+    document.getElementById("fileInput").addEventListener("change", function() {
+      const file = this.files[0];
+      if (file && file.name.endsWith('.lua')) {
+        const reader = new FileReader();
+        reader.onload = function(e) {
+          document.getElementById("luaInput").value = e.target.result;
+        };
+        reader.readAsText(file);
+      } else {
+        alert("Only .lua files are allowed.");
+      }
+    });
+
+    function escapeLuaString(str) {
+      return str.split('').map(c => '\\' + c.charCodeAt(0)).join('');
+    }
+
+    function obfuscate() {
+      const code = document.getElementById("luaInput").value.trim();
+      if (!code) return alert("Enter Lua code first.");
+
+      // Encode the code using escape and wrap with loader
+      const escaped = escapeLuaString(code);
+      const wrapped = `${wmHeader};local s="${escaped}";local f=load(s:gsub("\\\\(%d+)",function(c)return string.char(tonumber(c))end));f()`;
+
+      document.getElementById("output").textContent = wrapped;
+    }
+
+    function copyOutput() {
+      const output = document.getElementById("output").textContent;
+      if (!output || output.startsWith("//")) return alert("Nothing to copy.");
+      navigator.clipboard.writeText(output).then(() => alert("Copied!"));
+    }
+
+    function download() {
+      const output = document.getElementById("output").textContent;
+      if (!output || output.startsWith("//")) return alert("Nothing to download.");
+      const blob = new Blob([output], { type: "text/plain" });
+      const a = document.createElement("a");
+      a.href = URL.createObjectURL(blob);
+      a.download = "obfuscated.lua";
+      a.click();
+    }
+
+    function resetInput() {
+      document.getElementById("luaInput").value = "";
+      document.getElementById("output").textContent = "// obfuscated result will appear here";
+    }
+  </script>
+</body>
+</html>
